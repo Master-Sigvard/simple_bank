@@ -9,6 +9,11 @@ contract SimpleBank is Ownable {
     uint public balance;
     bool public currentBankState;
     address [] public members;
+    
+    function addToBalance() public payable {
+        require(currentBankState && rest() != 0 && arrayCheck(msg.sender) && msg.value <= rest());
+        balance += msg.value; 
+    }
 
     function start(uint _sum) public onlyOwner returns(bool) {
         sum = _sum;
@@ -21,25 +26,11 @@ contract SimpleBank is Ownable {
         members.push(_address);
     }
 
-    function addToBalance() public payable {
-        require(currentBankState && rest() != 0 && arrayCheck(msg.sender) && msg.value <= rest());
-        balance += msg.value; 
-    }
-
     function withdraw() public onlyOwner {
         require(rest() == 0);
         currentBankState = false;
         members = new address [](0);
         payable(owner()).transfer(address(this).balance);
-    }
-
-    function rest () public view returns(uint) {
-        uint _rest = sum - balance;
-        return _rest;
-    }
-
-    function viewBalance() public view returns (uint) {
-        return balance;
     }
 
     ///@dev checking if address belongs to array
@@ -51,5 +42,27 @@ contract SimpleBank is Ownable {
         }
         return false;
     }
+
+    function rest () public view returns(uint) {
+        uint _rest = sum - balance;
+        return _rest;
+    }
+
+    function viewBalance() public view returns (uint) {
+        return balance;
+    }
+
+    function viewMembers() public view returns (address[] memory) {
+        return members;
+    }
+
+    function viewSum() public view returns(uint) {
+        return sum;
+    }
+
+    function viewCurrentBankState() public view returns(bool) {
+        return currentBankState;
+    }
+
 
 }
