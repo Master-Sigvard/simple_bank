@@ -1,66 +1,59 @@
-//SPDX-License-Identifier: GPL-3.0
-pragma solidity = 0.8.17;
+//SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/access/ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SimpleBank is Ownable {
     
-    uint public sum;
-    uint public balance;
+    uint256 public sum;
+
+    uint256 public balance;
+
     bool public currentBankState;
+
+    ///@dev do mapping
+    mapping (address => bool) isMember;
     address [] public members;
     
-    function addToBalance() public payable {
-        require(currentBankState && rest() != 0 && arrayCheck(msg.sender) && msg.value <= rest());
+    function addToBalance() external payable {
+        require(currentBankState && rest() != 0 && isMember[msg.sender] && msg.value <= rest());
         balance += msg.value; 
     }
 
-    function start(uint _sum) public onlyOwner returns(bool) {
+    function start(uint _sum) external onlyOwner {
         sum = _sum;
+        isMember[owner()] = true;
         members.push(owner());
         currentBankState = true;
-        return currentBankState;
     }
 
-    function addMember(address _address) public onlyOwner {
-        members.push(_address);
+    function addMember(address _user) external onlyOwner {
+        isMember[_user] = true;
+        members.push(_user);
     }
 
-    function withdraw() public onlyOwner {
+
+    ///@dev do mapping
+    function withdraw() external onlyOwner {
         require(rest() == 0);
         currentBankState = false;
-        members = new address [](0);
-        payable(owner()).transfer(address(this).balance);
+        membersReset();
+        sum = 0;
+        (bool success,) = owner().call{ value:sum }( "" );
+        require(success);
     }
 
-    ///@dev checking if address belongs to array
-    function arrayCheck (address _address) private view returns (bool) {
-        for (uint i = 0; i < members.length; i++) {
-            if (_address == members[i]) {
-                return true;
-            }
+    function membersReset() private {
+        for (uint8 i=0; i < members.length; i++) {
+            isMember[members[i]] = false;
         }
-        return false;
     }
 
     function rest () public view returns(uint) {
-        uint _rest = sum - balance;
-        return _rest;
+        return sum - balance;
     }
 
-    function viewBalance() public view returns (uint) {
-        return balance;
-    }
-
-    function viewMembers() public view returns (address[] memory) {
-        return members;
-    }
-
-    function viewSum() public view returns(uint) {
-        return sum;
-    }
-
-    function viewCurrentBankState() public view returns(bool) {
+    function viewCurrentBankState() public view returns (bool) {
         return currentBankState;
     }
 
